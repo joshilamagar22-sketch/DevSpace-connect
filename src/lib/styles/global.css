@@ -1,0 +1,48 @@
+
+/* 1. Design variables */
+:root {
+  font-family: 'Inter', Arial, sans-serif;
+
+  --background: #f7f9fc;
+  --surface: #ffffff;
+  --primary: #a9c9e8;
+  --primary-dark: #729ec7;
+  --text: #273444;
+  --muted: #7d8997;
+  --border: #e4eaf1;
+
+  color: var(--text);
+  background: var(--background);
+}
+
+/* 2. Reset default browser spacing */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* 3. Basic body styling */
+body {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* 4. Buttons and links */
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 5. Images */
+img {
+  max-width: 100%;
+  display: block;
+}
