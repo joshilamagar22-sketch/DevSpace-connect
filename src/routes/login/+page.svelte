@@ -1,21 +1,39 @@
 
 <script>
+  import { supabase } from '../../lib/supabaseClient.js';
+
+  import { page } from '$app/state';
+
   let email = $state('');
   let password = $state('');
   let showPassword = $state(false);
   let error = $state('');
+  let loading = $state(false);
 
-  function handleLogin(event) {
-    event.preventDefault();
-    error = '';
+  /** @param {SubmitEvent} event */
+async function handleLogin(event) {
+  event.preventDefault();
 
-    if (!email || !password) {
-      error = 'Please fill in all fields.';
-      return;
-    }
+  error = '';
+  loading = true;
 
-    error = 'Authentication is not connected yet. Supabase integration is coming next.';
+  const { data, error: loginError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+  loading = false;
+
+  if (loginError) {
+    error = loginError.message;
+    return;
   }
+
+  const redirectTo = page.url.searchParams.get('redirect') || '/my-repositories';
+
+window.location.href = redirectTo;
+}
 </script>
 
 <svelte:head>
@@ -42,6 +60,7 @@
       />
 
       <label for="password">Password</label>
+
       <div class="password-field">
         <input
           id="password"
@@ -56,7 +75,9 @@
         </button>
       </div>
 
-      <button type="submit" class="submit-button">Log In</button>
+      <button type="submit" class="submit-button" disabled={loading}>
+        {loading ? 'Logging in...' : 'Log In'}
+      </button>
 
       {#if error}
         <p class="error-message">{error}</p>
@@ -109,8 +130,7 @@
     margin-bottom: 10px;
   }
 
-  .heading p,
-  .switch-text {
+  .heading p, .switch-text {
     color: #778397;
     font-size: 14px;
     line-height: 1.7;
@@ -174,8 +194,9 @@
     margin-top: 8px;
   }
 
-  .submit-button:hover {
-    background: #3f73c0;
+  .submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .switch-text {
@@ -192,7 +213,6 @@
   .error-message {
     color: #c0392b;
     font-size: 13px;
-    line-height: 1.5;
   }
 
   @media (max-width: 480px) {

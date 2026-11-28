@@ -1,20 +1,23 @@
 
 <script>
+  import { supabase } from '../../lib/supabaseClient.js';
+
+  import { page } from '$app/state';
   let name = $state('');
   let email = $state('');
   let password = $state('');
   let confirmPassword = $state('');
   let showPassword = $state(false);
+  let message = $state('');
   let error = $state('');
+  let loading = $state(false);
 
-  function handleSignup(event) {
+  /** @param {SubmitEvent} event */
+  async function handleSignup(event) {
     event.preventDefault();
-    error = '';
 
-    if (!name || !email || !password || !confirmPassword) {
-      error = 'Please fill in all fields.';
-      return;
-    }
+    error = '';
+    message = '';
 
     if (password.length < 8) {
       error = 'Password must contain at least 8 characters.';
@@ -26,7 +29,32 @@
       return;
     }
 
-    error = 'Account creation is not connected yet. Supabase integration is coming next.';
+    loading = true;
+
+    const { data, error: signupError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: name
+        }
+      }
+    });
+
+    loading = false;
+
+    if (signupError) {
+      error = signupError.message;
+      return;
+    }
+
+    if (data.session) {
+  const redirectTo = page.url.searchParams.get('redirect') || '/my-repositories';
+
+  window.location.href = redirectTo;
+} else {
+  message = 'Account created! Please check your email to verify your account.';
+}
   }
 </script>
 
@@ -45,22 +73,10 @@
 
     <form onsubmit={handleSignup}>
       <label for="name">Full name</label>
-      <input
-        id="name"
-        type="text"
-        placeholder="Your name"
-        bind:value={name}
-        required
-      />
+      <input id="name" type="text" placeholder="Your name" bind:value={name} required />
 
       <label for="email">Email address</label>
-      <input
-        id="email"
-        type="email"
-        placeholder="you@example.com"
-        bind:value={email}
-        required
-      />
+      <input id="email" type="email" placeholder="you@example.com" bind:value={email} required />
 
       <label for="password">Password</label>
       <div class="password-field">
@@ -71,7 +87,6 @@
           bind:value={password}
           required
         />
-
         <button type="button" onclick={() => showPassword = !showPassword}>
           {showPassword ? 'Hide' : 'Show'}
         </button>
@@ -86,10 +101,16 @@
         required
       />
 
-      <button type="submit" class="submit-button">Create Account</button>
+      <button type="submit" class="submit-button" disabled={loading}>
+        {loading ? 'Creating account...' : 'Create Account'}
+      </button>
 
       {#if error}
         <p class="error-message">{error}</p>
+      {/if}
+
+      {#if message}
+        <p class="success-message">{message}</p>
       {/if}
     </form>
 
@@ -139,8 +160,7 @@
     margin-bottom: 10px;
   }
 
-  .heading p,
-  .switch-text {
+  .heading p, .switch-text {
     color: #778397;
     font-size: 14px;
     line-height: 1.7;
@@ -201,11 +221,11 @@
     border-radius: 8px;
     font-weight: 600;
     cursor: pointer;
-    margin-top: 8px;
   }
 
-  .submit-button:hover {
-    background: #3f73c0;
+  .submit-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .switch-text {
@@ -222,7 +242,12 @@
   .error-message {
     color: #c0392b;
     font-size: 13px;
-    line-height: 1.5;
+  }
+
+  .success-message {
+    color: #218653;
+    font-size: 13px;
+    line-height: 1.6;
   }
 
   @media (max-width: 480px) {
